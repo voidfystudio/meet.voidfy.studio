@@ -46,6 +46,7 @@ app.post(
 
 
 		if (tsscmp(expectedSignature, signature) === false) {
+			console.error("Webhook Error: Signatures do not match with what is required", expectedSignature, signature);
 			return response.status(400).send(`Webhook Error: Signatures do not match with what is required`);
 		}
 
@@ -55,6 +56,7 @@ app.post(
 		const tolerance = 2 * 60
 
 		if (Math.abs(currentTimestamp - recievedTimestamp) > tolerance) {
+			console.error("Webhook Error: Timestamp is outside of the tolerance window", currentTimestamp, recievedTimestamp, Math.abs(currentTimestamp - recievedTimestamp));
 			return response.status(400).send(`Webhook Error: Timestamp is outside of the tolerance window`);
 		}
 
