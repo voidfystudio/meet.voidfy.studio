@@ -50,8 +50,8 @@ app.post(
 			return response.status(400).send(`Webhook Error: Signatures do not match with what is required`);
 		}
 
-		const currentTimestamp = Math.floor(Date.now() / 1000);
-		const recievedTimestamp = Math.floor(parseInt(timestamp, 10) / 1000);
+		const currentTimestamp = Math.floor(Date.now());
+		const recievedTimestamp = Math.floor(parseInt(timestamp, 10));
 
 		const tolerance = 2 * 60
 
