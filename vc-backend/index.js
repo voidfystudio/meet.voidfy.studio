@@ -24,9 +24,11 @@ router.post(
 	express.raw({ type: "application/json" }),
 
 	async (request, response) => {
-
+        console.log("Webhook received");
         console.log(util.inspect(request, false, null, true));
-        console.log(util.inspect(response, false, null, true));
+        // console.log(util.inspect(response, false, null, true));
+        console.log(util.inspect(request.body, false, null, true));
+        console.log(util.inspect(request.headers, false, null, true));
 
         return response.status(200).end();
     }
