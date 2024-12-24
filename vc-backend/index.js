@@ -7,6 +7,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
+import tsscmp from "tsscmp";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 global.appRoot = path.resolve(__dirname);
@@ -26,44 +28,81 @@ app.post(
 	express.raw({ type: "application/json" }),
 
 	async (request, response) => {
-        
-        const header = request.headers["x-jaas-signature"];
-        const elements = header.split(","); 
-        const timestampElement = elements.find(el => el.startsWith("t=")); 
-        const signatureElement = elements.find(el => el.startsWith("v1=")); 
-        const timestamp = timestampElement.split("=")[1]; 
-        const signature = signatureElement.split("=")[1];
-        const payload = request.body.toString(); 
-        const signedPayload = `${timestamp}.${payload}`;
 
-        const SECRET = `whsec_dac2b21a74144c56a7ce482c07664fad`;
-        const hmac = crypto.createHmac("sha256", SECRET)
-        hmac.update(signedPayload, "utf-8");
+		const header = request.headers["x-jaas-signature"];
+		const elements = header.split(",");
+		const timestampElement = elements.find(el => el.startsWith("t="));
+		const signatureElement = elements.find(el => el.startsWith("v1="));
+		const timestamp = timestampElement.split("=")[1];
+		const signature = signatureElement.split("v1=")[1];
+		const payload = request.body.toString();
+		const signedPayload = `${timestamp}.${payload}`;
 
-        const expectedSignature = hmac.digest("base64");
+		const SECRET = process.env.JAAS_WEBHOOK_SECRET;
+		const hmac = crypto.createHmac("sha256", SECRET)
+		hmac.update(signedPayload, "utf-8");
+
+		const expectedSignature = hmac.digest("base64");
 
 
-        console.log({
-            signature,
-            expectedSignature,
-            payload,
-            b: request.body.toString('utf-8'),
-        })
+		if (tsscmp(expectedSignature, signature) === false) {
+			return response.status(400).send(`Webhook Error: Signatures do not match with what is required`);
+		}
 
-        try {
+		const currentTimestamp = Math.floor(Date.now() / 1000);
+		const recievedTimestamp = Math.floor(parseInt(timestamp, 10) / 1000);
 
-            let r = JSON.parse(request.body.toString('utf-8'));
+		const tolerance = 2 * 60
 
-            console.log({
+		if (Math.abs(currentTimestamp - recievedTimestamp) > tolerance) {
+			return response.status(400).send(`Webhook Error: Timestamp is outside of the tolerance window`);
+		}
 
-                payload: r
-            });
-        } catch (err) {
-            console.error(err);
-        }
-        
-        return response.status(200).end();
-    }
+		// Implement your webhook logic here
+
+		const data = JSON.parse(payload);
+
+		if (!data) {
+			// Cannot do anything with this data
+			return;
+		}
+
+		// FIXME: Idempotency key check
+
+
+		// TODO: Doing the SETTINGS_PROVISIONING HERE
+
+
+		const { eventType, fqn, idempotencyKey, data: eventData } = data;
+
+		if (eventType !== "SETTINGS_PROVISIONING") {
+			response.status(200).end();
+		}
+
+		console.log({
+			eventData,
+			fqn,
+			idempotencyKey,
+			eventData,
+		});
+
+		switch (eventType) {
+			case "SETTINGS_PROVISIONING":
+
+				// TODO: Some real stuff here.
+
+				return response.status(200).json({
+					"lobbyEnabled": true,
+					"passcode": "0000",
+					"lobbyType": "WAIT_FOR_APPROVAL",
+					"transcriberType": "GOOGLE"
+				})
+			default:
+				break;
+		}
+		
+		return;
+	}
 );
 
 
@@ -71,13 +110,13 @@ app.use(express.json({ limit: "500mb" }));
 
 // setup URL encoded parser middleware
 app.use(express.urlencoded({
-    extended: true
+	extended: true
 }));
 
 app.get("/", (_request, response) => {
-    return response.status(200).send("Home");
+	return response.status(200).send("Home");
 });
 
 app.listen(process?.env?.PORT ?? 8000, () => {
-    console.log(`Server is running on port ${process?.env?.PORT || 8000}`);
+	console.log(`Server is running on port ${process?.env?.PORT || 8000}`);
 });

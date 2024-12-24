@@ -19,6 +19,7 @@
     "firebase-admin": "^13.0.2",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "tsscmp": "^1.0.6"
   }
 }
