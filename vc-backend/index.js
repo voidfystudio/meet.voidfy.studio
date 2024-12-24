@@ -4,6 +4,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import util from "node:util";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,25 +26,42 @@ app.post(
 	express.raw({ type: "application/json" }),
 
 	async (request, response) => {
-
-        console.log("Headers", JSON.stringify(request.headers))
-
-        const signature = request.headers["x-jaas-signature"];
         
-        const [ _t, _v1 ] = signature.split(",");
-        
-        const [ t, v1 ] = [ _t.split("=")[1], _v1.split("v1=", 2).at(1) ];
+        const header = request.headers["x-jaas-signature"];
+        const elements = header.split(","); 
+        const timestampElement = elements.find(el => el.startsWith("t=")); 
+        const signatureElement = elements.find(el => el.startsWith("v1=")); 
+        const timestamp = timestampElement.split("=")[1]; 
+        const signature = signatureElement.split("=")[1];
+        const payload = request.body.toString(); 
+        const signedPayload = `${timestamp}.${payload}`;
+
+        const SECRET = `whsec_dac2b21a74144c56a7ce482c07664fad`;
+        const hmac = crypto.createHmac("sha256", SECRET)
+        hmac.update(signedPayload, "utf-8");
+
+        const expectedSignature = hmac.digest("base64");
+
 
         console.log({
-            timestamp: t,
-            signature: v1,
-        });
+            signature,
+            expectedSignature,
+            payload,
+            b: request.body.toString('utf-8'),
+        })
 
-        console.log("Raw Body", request.rawBody);
-        console.log("Body", request.body);
+        try {
 
+            let r = JSON.parse(request.body.toString('utf-8'));
 
+            console.log({
 
+                payload: r
+            });
+        } catch (err) {
+            console.error(err);
+        }
+        
         return response.status(200).end();
     }
 );
