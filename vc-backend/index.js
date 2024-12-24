@@ -4,6 +4,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import util from "node:util";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +19,7 @@ app.use(morgan("combined"));
 // Set up helmet for extra security
 app.use(helmet());
 
-router.post(
+app.post(
 	"/webhook",
 
 	express.raw({ type: "application/json" }),
