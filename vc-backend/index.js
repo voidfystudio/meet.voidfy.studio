@@ -29,6 +29,8 @@ app.post(
 
 	async (request, response) => {
 
+		console.log("Webhook Recieved", JSON.stringify(request.headers, null, 2), request.body.toString());
+
 		const header = request.headers["x-jaas-signature"];
 		const elements = header.split(",");
 		const timestampElement = elements.find(el => el.startsWith("t="));
