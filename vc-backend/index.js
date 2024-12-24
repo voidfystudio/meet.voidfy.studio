@@ -53,9 +53,11 @@ app.post(
 		const currentTimestamp = Math.floor(Date.now());
 		const recievedTimestamp = Math.floor(parseInt(timestamp, 10));
 
+		const diff = Math.floor(Math.abs(currentTimestamp - recievedTimestamp) / 1000);
+
 		const tolerance = 2 * 60
 
-		if (Math.abs(currentTimestamp - recievedTimestamp) > tolerance) {
+		if (diff > tolerance) {
 			console.error("Webhook Error: Timestamp is outside of the tolerance window", currentTimestamp, recievedTimestamp, Math.abs(currentTimestamp - recievedTimestamp));
 			return response.status(400).send(`Webhook Error: Timestamp is outside of the tolerance window`);
 		}
