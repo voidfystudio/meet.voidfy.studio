@@ -59,7 +59,7 @@ app.post(
 
 		if (diff > tolerance) {
 			console.error("Webhook Error: Timestamp is outside of the tolerance window", currentTimestamp, recievedTimestamp, Math.abs(currentTimestamp - recievedTimestamp));
-			return response.status(400).send(`Webhook Error: Timestamp is outside of the tolerance window`);
+			// return response.status(400).send(`Webhook Error: Timestamp is outside of the tolerance window`);
 		}
 
 		// Implement your webhook logic here
