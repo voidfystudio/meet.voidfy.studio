@@ -29,8 +29,6 @@ app.post(
 
 	async (request, response) => {
 
-		console.log("Webhook Recieved", JSON.stringify(request.headers, null, 2), request.body.toString());
-
 		const header = request.headers["x-jaas-signature"];
 		const elements = header.split(",");
 		const timestampElement = elements.find(el => el.startsWith("t="));
@@ -64,6 +62,8 @@ app.post(
 			// return response.status(400).send(`Webhook Error: Timestamp is outside of the tolerance window`);
 		}
 
+		response.status(200).end();
+
 		// Implement your webhook logic here
 
 		const data = JSON.parse(payload);
@@ -76,14 +76,7 @@ app.post(
 		// FIXME: Idempotency key check
 
 
-		// TODO: Doing the SETTINGS_PROVISIONING HERE
-
-
-		const { eventType, fqn, idempotencyKey, data: eventData } = data;
-
-		if (eventType !== "SETTINGS_PROVISIONING") {
-			response.status(200).end();
-		}
+	
 
 		console.log({
 			eventData,
@@ -93,22 +86,45 @@ app.post(
 		});
 
 		switch (eventType) {
-			case "SETTINGS_PROVISIONING":
-
-				// TODO: Some real stuff here.
-
-				return response.status(200).json({
-					"lobbyEnabled": true,
-					"passcode": "0000",
-					"lobbyType": "WAIT_FOR_APPROVAL",
-					"transcriberType": "GOOGLE"
-				})
+			
 			default:
 				break;
 		}
 		
 		return;
 	}
+);
+
+app.post(
+	"/settings",
+
+	express.raw({ type: "application/json" }),
+
+	async (request, response) => {
+
+		const payload = request.body.toString();
+		const data = JSON.parse(payload);
+
+		if(!data) {
+			return response.status(400).send("Invalid data");
+		}
+
+		const { fqn } = data;
+
+		console.log("Settings for", fqn, "will be taken from database.");
+
+		// TODO: Real implementation; for now, just return a dummy response
+
+		return response.status(200).json({
+			"lobbyEnabled": true,
+			"passcode": "1920",
+			"lobbyType": "WAIT_FOR_APPROVAL",
+			"maxOccupants": 5,
+			"transcriberType": "GOOGLE"
+		})
+
+	}
+
 );
 
 
