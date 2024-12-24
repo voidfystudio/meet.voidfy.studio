@@ -25,10 +25,25 @@ app.post(
 	express.raw({ type: "application/json" }),
 
 	async (request, response) => {
-        console.log("Path", request.path);
-        console.log("Method", request.method);
+
         console.log("Headers", JSON.stringify(request.headers))
-        console.log("Body", JSON.stringify(request.body), request.body);
+        
+        const signature = request.headers["x-jaas-signature"];
+        
+        const { _t, _v1 } = signature.split(",");
+        
+        const { t, v1 } = { t: _t.split("=")[1], v1:_v1.split("v1=", 2).at(1) };
+
+        console.log({
+            timestamp: t,
+            signature: v1,
+        });
+
+        console.log("Raw Body", request.rawBody);
+        console.log("Body", request.body);
+
+
+
         return response.status(200).end();
     }
 );
