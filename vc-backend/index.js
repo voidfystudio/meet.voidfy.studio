@@ -27,12 +27,12 @@ app.post(
 	async (request, response) => {
 
         console.log("Headers", JSON.stringify(request.headers))
-        
+
         const signature = request.headers["x-jaas-signature"];
         
-        const { _t, _v1 } = signature.split(",");
+        const [ _t, _v1 ] = signature.split(",");
         
-        const { t, v1 } = { t: _t.split("=")[1], v1:_v1.split("v1=", 2).at(1) };
+        const [ t, v1 ] = [ _t.split("=")[1], _v1.split("v1=", 2).at(1) ];
 
         console.log({
             timestamp: t,
